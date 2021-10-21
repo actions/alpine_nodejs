@@ -5,7 +5,7 @@ WORKDIR /usr/src/app
 
 # install dependency
 RUN apk add --no-cache libstdc++
-RUN apk add --no-cache --virtual .build-deps binutils-gold curl g++ gcc gnupg libgcc linux-headers make python
+RUN apk add --no-cache --virtual .build-deps binutils-gold curl g++ gcc gnupg libgcc linux-headers make python3
 
 # donwload and compile node from source code.
 RUN wget https://nodejs.org/dist/$NodeVersion/node-$NodeVersion.tar.gz && tar -zxvf node-$NodeVersion.tar.gz
