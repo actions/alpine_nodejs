@@ -21,7 +21,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build the Docker image
       run: |
-         docker build --file Dockerfile --tag alpine_nodejs:${{github.event.inputs.NodeVersion}} --build-arg NodeVersion=${{github.event.inputs.NodeVersion}} --build-arg PythonVersion=${{github.event.inputs.PythonVersion}}.
+         docker build --file Dockerfile --tag alpine_nodejs:${{github.event.inputs.NodeVersion}} --build-arg NodeVersion=${{github.event.inputs.NodeVersion}} --build-arg PythonVersion=${{github.event.inputs.PythonVersion}} .
     - name: Copy alpine node.js out
       run: |
          mkdir $RUNNER_TEMP/alpine_node
