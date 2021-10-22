@@ -45,5 +45,8 @@ jobs:
     - run: |
         ls -l
         tar xzf ./node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+        ls -l -R
+        cd ./node-${{github.event.inputs.NodeVersion}}-alpine-x64
         ./bin/node -v
         ./bin/node -e "console.log('hello world')"
+        uname -a
