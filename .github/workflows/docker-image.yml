@@ -1,7 +1,6 @@
 name: Build Alpine Node.js
 permissions:
   contents: read
-  packages: write
 
 on:
   workflow_dispatch:
@@ -22,14 +21,6 @@ jobs:
     - name: Build the Docker image
       run: |
          docker build --file Dockerfile --tag alpine_nodejs:${{github.event.inputs.NodeVersion}} --build-arg NodeVersion=${{github.event.inputs.NodeVersion}} --build-arg PythonVersion=${{github.event.inputs.PythonVersion}} .
-    - name: Login to GitHub Container Registry
-      uses: docker/login-action@v1
-      with:
-        registry: ghcr.io
-        username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
-    - name: Debugging with tmate
-      uses: mxschmitt/action-tmate@v3
     - name: Copy alpine node.js out
       run: |
          mkdir $RUNNER_TEMP/alpine_node
@@ -55,20 +46,3 @@ jobs:
         tar xzf ./node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
         ./bin/node -v
         ./bin/node -e "console.log('hello world')"
-        
-        
-        
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
-      
