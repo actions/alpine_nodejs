@@ -27,4 +27,37 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
-        path:  ${{runner.temp}}/alpine_node
+        path:  ${{runner.temp}}/alpine_node/node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+
+  test:
+    name: Test node.js ${{github.event.inputs.NodeVersion}}
+    needs: [build]
+    runs-on: ubuntu-latest
+    concurrency: alpine
+    steps:
+    - name: Download alpine node.js
+      uses: actions/download-artifact@v2
+      with:
+        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
+    - run: |
+        ls -l
+        tar xzf ./node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+        ./bin/node -v
+        ./bin/node -e "console.log('hello world')"
+        
+        
+        
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      
