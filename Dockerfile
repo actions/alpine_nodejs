@@ -17,7 +17,6 @@ RUN cd node-$NodeVersion && ./configure --dest-cpu=x64 --partly-static && make -
 RUN mkdir -p /usr/src/out/bin
 RUN cp /usr/src/app/node-$NodeVersion/out/Release/node /usr/src/out/bin
 RUN cp /usr/src/app/node-$NodeVersion/LICENSE /usr/src/out/LICENSE
-RUN tar -czvf node-$NodeVersion-alpine.tar.gz /usr/src/bin
 RUN tar -czvf node-$NodeVersion-alpine-x64.tar.gz /usr/src/out/bin /usr/src/out/LICENSE
 RUN cp ./node-$NodeVersion-alpine-x64.tar.gz /node_staging
 
