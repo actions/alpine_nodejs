@@ -15,11 +15,12 @@ RUN cd node-$NodeVersion && ./configure --dest-cpu=x64 --partly-static && make -
 
 # create and copy tar.gz into /node_staging
 RUN mkdir -p /usr/src/out/bin
+RUN mkdir -p /node_staging
 WORKDIR /usr/src/out
 RUN cp /usr/src/app/node-$NodeVersion/out/Release/node /usr/src/out/bin/node
 RUN cp /usr/src/app/node-$NodeVersion/LICENSE /usr/src/out/LICENSE
 RUN tar -czvf node-$NodeVersion-alpine-x64.tar.gz ./bin ./LICENSE && rm -rf ./bin ./LICENSE
-RUN cp ./node-$NodeVersion-alpine-x64.tar.gz /node_staging
+RUN cp ./node-$NodeVersion-alpine-x64.tar.gz /node_staging/node-$NodeVersion-alpine-x64.tar.gz && ls -l /node_staging
 
 # copy the tar.gz into the mapped in volume
-CMD ["cp", "/node_staging", "/node_output"]
+CMD ["cp", "-v", "/node_staging", "/node_output"]

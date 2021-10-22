@@ -25,6 +25,7 @@ jobs:
       run: |
          mkdir $RUNNER_TEMP/alpine_node
          docker run --rm -v $RUNNER_TEMP/alpine_node:/node_output alpine_nodejs:${{github.event.inputs.NodeVersion}}
+         ls -l -R $RUNNER_TEMP/alpine_node
     - name: Upload alpine node.js
       uses: actions/upload-artifact@v2
       with:
