@@ -10,13 +10,10 @@ on:
         required: true
         description: 'Node.js v12 needs python2 and Node.js v16 needs python3'
 
-
 jobs:
-
   build:
-
+    name: Build node.js ${{github.event.inputs.NodeVersion}}
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Build the Docker image
@@ -29,5 +26,5 @@ jobs:
     - name: Upload alpine node.js
       uses: actions/upload-artifact@v2
       with:
-        name: alpine_nodejs
+        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
         path:  ${{runner.temp}}/alpine_node
