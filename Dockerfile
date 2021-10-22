@@ -23,4 +23,4 @@ RUN tar -czvf node-$NodeVersion-alpine-x64.tar.gz ./bin ./LICENSE && rm -rf ./bi
 RUN cp ./node-$NodeVersion-alpine-x64.tar.gz /node_staging/node-$NodeVersion-alpine-x64.tar.gz && ls -l /node_staging
 
 # copy the tar.gz into the mapped in volume
-CMD ["cp", "-v", "/node_staging", "/node_output"]
+CMD ["cp", "-v", "-a", "/node_staging/.", "/node_output/"]
