@@ -1,6 +1,7 @@
 name: Build Alpine Node.js
 permissions:
-  contents: read
+  contents: write
+  
 
 on:
   workflow_dispatch:
@@ -51,3 +52,33 @@ jobs:
         uname -a
         ldd ./bin/node
       name: Test node
+  release:
+    name: Create release for node.js ${{github.event.inputs.NodeVersion}}
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Download alpine node.js
+      uses: actions/download-artifact@v2
+      with:
+        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
+    # Create GitHub release
+    - uses: actions/create-release@master
+      id: createRelease
+      name: Create node.js ${{github.event.inputs.NodeVersion}} Alpine Release
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: "${{github.event.inputs.NodeVersion}}"
+        release_name: "${{github.event.inputs.NodeVersion}}"
+        body: |
+          Alpine node.js ${{github.event.inputs.NodeVersion}}
+    # Upload release assets
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1.0.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.createRelease.outputs.upload_url }}
+        asset_path: ${{ github.workspace }}/node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+        asset_name: node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+        asset_content_type: application/octet-stream
