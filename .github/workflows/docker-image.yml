@@ -1,17 +1,13 @@
 name: Build Alpine Node.js
 permissions:
   contents: write
-  
 
 on:
   workflow_dispatch:
     inputs:
       NodeVersion:
         required: true
-        description: 'Node.js version to build (ex: v12.4.0)'
-      PythonVersion:
-        required: true
-        description: 'Node.js v12 needs python2 and Node.js v16 needs python3'
+        description: 'Node.js version to build (ex: v12.22.7, v16.12.0)'
 
 jobs:
   build:
@@ -21,7 +17,15 @@ jobs:
     - uses: actions/checkout@v2
     - name: Build the Docker image
       run: |
-         docker build --file Dockerfile --tag alpine_nodejs:${{github.event.inputs.NodeVersion}} --build-arg NodeVersion=${{github.event.inputs.NodeVersion}} --build-arg PythonVersion=${{github.event.inputs.PythonVersion}} .
+         NodeVersion="${{github.event.inputs.NodeVersion}}"
+         PythonVersion="python3"
+         if [[ $NodeVersion = v12* ]]
+         then
+           PythonVersion="python2"
+         fi
+         echo node.js version $NodeVersion
+         echo python version $PythonVersion
+         docker build --file Dockerfile --tag alpine_nodejs:${{github.event.inputs.NodeVersion}} --build-arg NodeVersion=${{github.event.inputs.NodeVersion}} --build-arg PythonVersion=$PythonVersion .
     - name: Copy alpine node.js out
       run: |
          mkdir $RUNNER_TEMP/alpine_node
