@@ -1,0 +1,22 @@
+---
+version: 1
+ownership:
+- name: actions-alpine-nodejs
+  long_name: Actions Alpine NodeJS
+  description: Alpine NodeJS redeployment for actions runner
+  tier: 2
+  kind: artifact
+  team: github/c2c-actions-runtime
+  team_slack: actions-runners
+  repo: https://github.com/actions/alpine_nodejs
+  maintainer: benwells
+  exec_sponsor: isethi
+  qos: maintenance
+  sev1:
+    pagerduty: https://github.pagerduty.com/escalation_policies#PT5KQ9D
+    tta: '1 business days'
+  sev2:
+    slack: actions-runtime
+    issue: https://github.com/github/actions-runners/issues
+    tta: '2 business days'
+  dependencies: [ ]
