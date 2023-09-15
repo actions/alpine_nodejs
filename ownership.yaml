@@ -17,6 +17,10 @@ ownership:
     tta: '1 business days'
   sev2:
     slack: actions-runtime
-    issue: https://github.com/github/actions-runners/issues
+    issue: https://github.com/actions/alpine_nodejs/issues
     tta: '2 business days'
+  sev3:
+    slack: actions
+    issue: https://github.com/actions/alpine_nodejs/issues
+    tta: '2 weeks'
   dependencies: [ ]
