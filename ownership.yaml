@@ -1,7 +1,7 @@
 ---
 version: 1
 ownership:
-- name: actions-alpine-nodejs
+- name: actions_dotcom_actions-alpine-nodejs
   long_name: Actions Alpine NodeJS
   description: Alpine NodeJS redeployment for actions runner
   tier: 2
