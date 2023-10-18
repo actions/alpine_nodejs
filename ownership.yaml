@@ -7,7 +7,7 @@ ownership:
   tier: 2
   kind: artifact
   team: github/c2c-actions-runtime
-  team_slack: actions-runners
+  team_slack: actions-runtime
   repo: https://github.com/actions/alpine_nodejs
   maintainer: benwells
   exec_sponsor: isethi
