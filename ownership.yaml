@@ -9,8 +9,8 @@ ownership:
   team: github/c2c-actions-runtime
   team_slack: actions-runtime
   repo: https://github.com/actions/alpine_nodejs
-  maintainer: benwells
-  exec_sponsor: isethi
+  maintainer: thboop
+  exec_sponsor: jmillsy
   qos: maintenance
   sev1:
     pagerduty: https://github.pagerduty.com/escalation_policies#PT5KQ9D
