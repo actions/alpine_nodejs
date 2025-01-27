@@ -11,8 +11,15 @@ on:
 
 jobs:
   build:
-    name: Build node.js ${{github.event.inputs.NodeVersion}}
-    runs-on: ubuntu-latest
+    name: Build node.js ${{github.event.inputs.NodeVersion}} (${{matrix.arch}})
+    runs-on: ${{matrix.runner}}
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          - arch: arm64
+            runner: ubuntu-24.04-arm
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
@@ -25,7 +32,11 @@ jobs:
          fi
          echo node.js version $NodeVersion
          echo python version $PythonVersion
-         docker build --file Dockerfile --tag alpine_nodejs:${{github.event.inputs.NodeVersion}} --build-arg NodeVersion=${{github.event.inputs.NodeVersion}} --build-arg PythonVersion=$PythonVersion .
+         docker build --file Dockerfile --tag alpine_nodejs:${{github.event.inputs.NodeVersion}} \
+         --build-arg NodeVersion=${{github.event.inputs.NodeVersion}} \
+         --build-arg PythonVersion=$PythonVersion \
+         --build-arg NodeArch=${{matrix.arch}} \
+         .
     - name: Copy alpine node.js out
       run: |
          mkdir $RUNNER_TEMP/alpine_node
@@ -34,22 +45,31 @@ jobs:
     - name: Upload alpine node.js
       uses: actions/upload-artifact@v4
       with:
-        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
-        path:  ${{runner.temp}}/alpine_node/node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}_${{matrix.arch}}
+        path: ${{runner.temp}}/alpine_node/node-${{github.event.inputs.NodeVersion}}-alpine-${{matrix.arch}}.tar.gz
 
   test:
-    name: Test node.js ${{github.event.inputs.NodeVersion}}
+    name: Test node.js ${{github.event.inputs.NodeVersion}} (${{matrix.arch}})
     needs: [build]
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.runner}}
+    strategy:
+      matrix:
+        include:
+          - arch: x64
+            runner: ubuntu-latest
+          # TODO enable running the tests on arm64 once actions/runner supports Alpine arm64
+          # https://github.com/actions/runner/pull/3665
+          #- arch: arm64
+          #  runner: ubuntu-24.04-arm
     container: alpine
     steps:
     - name: Download alpine node.js
       uses: actions/download-artifact@v4
       with:
-        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
+        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}_${{matrix.arch}}
     - run: |
         ls -l
-        tar xzf ./node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+        tar xzf ./node-${{github.event.inputs.NodeVersion}}-alpine-${{matrix.arch}}.tar.gz
         ls -l -R
         ./bin/node -v
         ./bin/node -e "console.log('hello world')"
@@ -61,28 +81,17 @@ jobs:
     needs: [test]
     runs-on: ubuntu-latest
     steps:
-    - name: Download alpine node.js
+    - name: Download alpine node.js (x64 and arm64)
       uses: actions/download-artifact@v4
       with:
-        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
-    # Create GitHub release
-    - uses: actions/create-release@master
-      id: createRelease
-      name: Create node.js ${{github.event.inputs.NodeVersion}} Alpine Release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        pattern: alpine_nodejs_${{github.event.inputs.NodeVersion}}_*
+        merge-multiple: true
+    - name: Release
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: "${{github.event.inputs.NodeVersion}}"
-        release_name: "${{github.event.inputs.NodeVersion}}"
+        name: "${{github.event.inputs.NodeVersion}}"
         body: |
           Alpine node.js ${{github.event.inputs.NodeVersion}}
-    # Upload release assets
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.createRelease.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
-        asset_name: node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
-        asset_content_type: application/octet-stream
+        files: |
+          node-*-alpine-*.tar.gz
