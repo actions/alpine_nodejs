@@ -49,7 +49,7 @@ jobs:
         path: ${{runner.temp}}/alpine_node/node-${{github.event.inputs.NodeVersion}}-alpine-${{matrix.arch}}.tar.gz
 
   test:
-    name: Test node.js ${{github.event.inputs.NodeVersion}}
+    name: Test node.js ${{github.event.inputs.NodeVersion}} (${{matrix.arch}})
     needs: [build]
     runs-on: ${{matrix.runner}}
     strategy:
@@ -57,8 +57,10 @@ jobs:
         include:
           - arch: x64
             runner: ubuntu-latest
-          - arch: arm64
-            runner: ubuntu-24.04-arm
+          # TODO enable running the tests on arm64 once actions/runner supports Alpine arm64
+          # https://github.com/actions/runner/pull/3665
+          #- arch: arm64
+          #  runner: ubuntu-24.04-arm
     container: alpine
     steps:
     - name: Download alpine node.js
