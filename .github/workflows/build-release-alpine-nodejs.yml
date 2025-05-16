@@ -8,16 +8,47 @@ on:
       NodeVersion:
         required: true
         description: 'Node.js version to build (ex: v12.22.7, v16.12.0)'
+  workflow_call: 
+    inputs:
+      NodeVersion:
+        required: true
+        description: 'Node.js version to build (ex: v12.22.7, v16.12.0)'
+        type: string
 
 jobs:
+  prebuild:
+    outputs:
+      NodeVersion: ${{ steps.check_node_version.outputs.NodeVersion }}
+    name: Determine node.js version
+    runs-on: ubuntu-latest
+    steps:
+    - name: Check node.js version
+      id: check_node_version
+      run: |
+        # Determine which NodeVersion input to use
+        if [ -n "${{ github.event.inputs.NodeVersion }}" ]; then
+          NODE_VERSION="${{ github.event.inputs.NodeVersion }}"
+          echo "Using NodeVersion from workflow_dispatch: $NODE_VERSION"
+        elif [ -n "${{ inputs.NodeVersion }}" ]; then
+          NODE_VERSION="${{ inputs.NodeVersion }}"
+          echo "Using NodeVersion from workflow_call: $NODE_VERSION"
+        else
+          echo "Error: No NodeVersion specified"
+          exit 1
+        fi
+        
+        # Set the output that will be used by subsequent steps/jobs
+        echo "NodeVersion=$NODE_VERSION" >> $GITHUB_OUTPUT   
+
   build:
-    name: Build node.js ${{github.event.inputs.NodeVersion}}
+    needs: [prebuild]
+    name: Build node.js ${{needs.prebuild.outputs.NodeVersion}}
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: |
-         NodeVersion="${{github.event.inputs.NodeVersion}}"
+         NodeVersion="${{needs.prebuild.outputs.NodeVersion}}"
          PythonVersion="python3"
          if [[ $NodeVersion = v12* ]]
          then
@@ -25,31 +56,31 @@ jobs:
          fi
          echo node.js version $NodeVersion
          echo python version $PythonVersion
-         docker build --file Dockerfile --tag alpine_nodejs:${{github.event.inputs.NodeVersion}} --build-arg NodeVersion=${{github.event.inputs.NodeVersion}} --build-arg PythonVersion=$PythonVersion .
+         docker build --file Dockerfile --tag alpine_nodejs:${{needs.prebuild.outputs.NodeVersion}} --build-arg NodeVersion=${{needs.prebuild.outputs.NodeVersion}} --build-arg PythonVersion=$PythonVersion .
     - name: Copy alpine node.js out
       run: |
          mkdir $RUNNER_TEMP/alpine_node
-         docker run --rm -v $RUNNER_TEMP/alpine_node:/node_output alpine_nodejs:${{github.event.inputs.NodeVersion}}
+         docker run --rm -v $RUNNER_TEMP/alpine_node:/node_output alpine_nodejs:${{needs.prebuild.outputs.NodeVersion}}
          ls -l -R $RUNNER_TEMP/alpine_node
     - name: Upload alpine node.js
       uses: actions/upload-artifact@v4
       with:
-        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
-        path:  ${{runner.temp}}/alpine_node/node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+        name: alpine_nodejs_${{needs.prebuild.outputs.NodeVersion}}
+        path:  ${{runner.temp}}/alpine_node/node-${{needs.prebuild.outputs.NodeVersion}}-alpine-x64.tar.gz
 
   test:
-    name: Test node.js ${{github.event.inputs.NodeVersion}}
-    needs: [build]
+    name: Test node.js ${{needs.prebuild.outputs.NodeVersion}}
+    needs: [prebuild, build]
     runs-on: ubuntu-latest
     container: alpine
     steps:
     - name: Download alpine node.js
       uses: actions/download-artifact@v4
       with:
-        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
+        name: alpine_nodejs_${{needs.prebuild.outputs.NodeVersion}}
     - run: |
         ls -l
-        tar xzf ./node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+        tar xzf ./node-${{needs.prebuild.outputs.NodeVersion}}-alpine-x64.tar.gz
         ls -l -R
         ./bin/node -v
         ./bin/node -e "console.log('hello world')"
@@ -57,25 +88,25 @@ jobs:
         ldd ./bin/node
       name: Test node
   release:
-    name: Create release for node.js ${{github.event.inputs.NodeVersion}}
-    needs: [test]
+    name: Create release for node.js ${{needs.prebuild.outputs.NodeVersion}}
+    needs: [prebuild, test]
     runs-on: ubuntu-latest
     steps:
     - name: Download alpine node.js
       uses: actions/download-artifact@v4
       with:
-        name: alpine_nodejs_${{github.event.inputs.NodeVersion}}
+        name: alpine_nodejs_${{needs.prebuild.outputs.NodeVersion}}
     # Create GitHub release
     - uses: actions/create-release@master
       id: createRelease
-      name: Create node.js ${{github.event.inputs.NodeVersion}} Alpine Release
+      name: Create node.js ${{needs.prebuild.outputs.NodeVersion}} Alpine Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: "${{github.event.inputs.NodeVersion}}"
-        release_name: "${{github.event.inputs.NodeVersion}}"
+        tag_name: "${{needs.prebuild.outputs.NodeVersion}}"
+        release_name: "${{needs.prebuild.outputs.NodeVersion}}"
         body: |
-          Alpine node.js ${{github.event.inputs.NodeVersion}}
+          Alpine node.js ${{needs.prebuild.outputs.NodeVersion}}
     # Upload release assets
     - name: Upload Release Asset
       uses: actions/upload-release-asset@v1.0.1
@@ -83,6 +114,6 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.createRelease.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
-        asset_name: node-${{github.event.inputs.NodeVersion}}-alpine-x64.tar.gz
+        asset_path: ${{ github.workspace }}/node-${{needs.prebuild.outputs.NodeVersion}}-alpine-x64.tar.gz
+        asset_name: node-${{needs.prebuild.outputs.NodeVersion}}-alpine-x64.tar.gz
         asset_content_type: application/octet-stream
