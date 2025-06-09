@@ -11,7 +11,7 @@ RUN apk add --no-cache --virtual .build-deps binutils-gold curl g++ gcc gnupg li
 
 # donwload and compile node from source code.
 RUN wget https://nodejs.org/dist/$NodeVersion/node-$NodeVersion.tar.gz && tar -zxvf node-$NodeVersion.tar.gz
-RUN cd node-$NodeVersion && ./configure --dest-cpu=x64 --partly-static && make -j$(getconf _NPROCESSORS_ONLN)
+RUN cd node-$NodeVersion && ./configure --dest-cpu=x64 --fully-static && make -j$(getconf _NPROCESSORS_ONLN)
 
 # create and copy tar.gz into /node_staging
 RUN mkdir -p /usr/src/out/bin
