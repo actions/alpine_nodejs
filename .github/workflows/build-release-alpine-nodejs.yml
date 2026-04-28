@@ -45,7 +45,7 @@ jobs:
     name: Build node.js ${{needs.prebuild.outputs.NodeVersion}}
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Build the Docker image
       run: |
          NodeVersion="${{needs.prebuild.outputs.NodeVersion}}"
@@ -96,24 +96,13 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name: alpine_nodejs_${{needs.prebuild.outputs.NodeVersion}}
-    # Create GitHub release
-    - uses: actions/create-release@master
-      id: createRelease
-      name: Create node.js ${{needs.prebuild.outputs.NodeVersion}} Alpine Release
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    # Create GitHub release and upload asset
+    - name: Create Release and Upload Asset
+      uses: softprops/action-gh-release@v2
       with:
         tag_name: "${{needs.prebuild.outputs.NodeVersion}}"
-        release_name: "${{needs.prebuild.outputs.NodeVersion}}"
+        name: "${{needs.prebuild.outputs.NodeVersion}}"
         body: |
           Alpine node.js ${{needs.prebuild.outputs.NodeVersion}}
-    # Upload release assets
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1.0.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.createRelease.outputs.upload_url }}
-        asset_path: ${{ github.workspace }}/node-${{needs.prebuild.outputs.NodeVersion}}-alpine-x64.tar.gz
-        asset_name: node-${{needs.prebuild.outputs.NodeVersion}}-alpine-x64.tar.gz
-        asset_content_type: application/octet-stream
+        files: ${{ github.workspace }}/node-${{needs.prebuild.outputs.NodeVersion}}-alpine-x64.tar.gz
+        token: ${{ secrets.GITHUB_TOKEN }}
