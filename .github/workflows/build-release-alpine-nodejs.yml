@@ -8,6 +8,10 @@ on:
       NodeVersion:
         required: true
         description: 'Node.js version to build (ex: v12.22.7, v16.12.0)'
+      DryRun:
+        description: 'DryRun will only build/test alpine node.js'
+        type: boolean
+        default: false
   workflow_call: 
     inputs:
       NodeVersion:
@@ -90,6 +94,7 @@ jobs:
   release:
     name: Create release for node.js ${{needs.prebuild.outputs.NodeVersion}}
     needs: [prebuild, test]
+    if: inputs['DryRun'] != true
     runs-on: ubuntu-latest
     steps:
     - name: Download alpine node.js
